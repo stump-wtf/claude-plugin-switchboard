@@ -1,0 +1,17 @@
+{
+  "name": "claude-plugin-switchboard",
+  "owner": {
+    "name": "Joe Stump",
+    "url": "https://github.com/joestump"
+  },
+  "plugins": [
+    {
+      "name": "switchboard",
+      "source": {
+        "source": "github",
+        "repo": "stump-wtf/claude-plugin-switchboard"
+      },
+      "description": "Work a Switchboard durable webhook-to-todo queue correctly: triage doorbell todos, ack one at a time, drain noise without a treadmill, and narrow the source when one event kind floods."
+    }
+  ]
+}
