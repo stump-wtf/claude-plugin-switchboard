@@ -75,11 +75,15 @@ is auditable.
 
 If **one event kind is flooding** the queue (classic offender: `workflow_run`, which can be
 70%+ of a CI-heavy repo's events), draining it by hand is a treadmill: CI keeps firing new ones.
-**Narrow the subscription at the source, then drain what remains.**
+**Stop it being created, then drain what remains** — via a Switchboard routing rule, or a
+narrower subscription at the producer.
 
-- If **you manage the webhook** (it shows up in `list_webhooks` within your endpoint's ceiling),
-  narrow or replace it with `create_webhook` / `rotate_webhook`, and **tell the human what you
-  changed.**
+- If **you manage the webhook** (it shows up in `list_webhooks`), narrow or replace it with
+  `create_webhook` / `rotate_webhook`, and **tell the human what you changed.**
+- **Or drop it inside Switchboard, needing nobody's cooperation** — usually the fastest real fix.
+  On a webhook you own, `add_webhook_rule` with `{drop: true}` discards the flooding kind before it
+  becomes a todo. Rules are ordered jq, first match wins. **Dry-run it with `test_webhook_rules`
+  before you save** — that evaluates against one of the webhook's stored events and saves nothing.
 - If the webhook is a **GitHub/Gitea repo webhook you do not manage** (common: the events queue
   is fed by a hook on someone else's repo), narrowing the event list needs **repo-admin +
   `admin:repo_hook`** on that repo. If you lack it, hand the human the exact remediation:
@@ -101,12 +105,11 @@ These matter because Switchboard payloads embed the **entire** upstream webhook 
    the default 50*, so `limit: 500` on a flooded queue returns 50 rows and looks like a 50-todo
    queue. Page with 200 and keep your own count. (stump.wtf/switchboard#198.)
 
-2. **Every `claim` AND every `complete` echoes the full ~15 KB webhook payload.** So each ack
-   costs ~30 KB of context. Draining 150 todos inline is ~5 MB — enough to bury your working
-   context. Mitigations, in order of preference:
-   - **Narrow the source first** so there is little left to drain.
-   - Drain in **batches within this session**, and rely on the harness summarizing older tool
-     results. Do NOT paste or summarize the payloads yourself; fire the calls and track counts.
+2. **Every `claim` AND every `complete` echoes the full ~15 KB webhook payload**, so each ack
+   costs ~30 KB and draining 150 todos inline is ~5 MB — enough to bury your working context.
+   Mitigations in order: **stop the flood at source first** so there is little left to drain, then
+   drain in **batches within this session**, relying on the harness to summarize older tool
+   results. Never paste or summarize the payloads yourself; fire the calls and track counts.
 
 3. **Subagents do NOT inherit the Switchboard MCP tools** (observed: `ToolSearch` finds nothing,
    direct calls return "No such tool available"). So the tempting move — "offload the bulk drain
@@ -141,9 +144,9 @@ idempotent, and a webhook's owning endpoint is always a target that cannot be re
 
 ## Tool reference
 
-This is the whole agent-facing surface: your endpoint advertises only the verbs it was granted,
-so `tools/list` may show fewer, never more. Anything absent does not exist — in particular
-**no tool creates a todo**; todos arrive only as verified webhook deliveries.
+Every tool registered at switchboard `main` (3b9209c), checked there. Your endpoint advertises
+only the verbs it was granted, so `tools/list` may show fewer, never more — and nothing outside
+this table exists. In particular **no tool creates a todo**: todos arrive as webhook deliveries.
 
 | Tool | Use |
 |---|---|
@@ -153,14 +156,11 @@ so `tools/list` may show fewer, never more. Anything absent does not exist — i
 | `heartbeat` | Extend a lease on a long job. |
 | `complete` | Ack a todo done, with a `result`. |
 | `fail` | Ack a todo failed (retries with backoff, then dead-letters), with a `result`. |
-| `list_webhooks` | See self-managed webhooks + your endpoint's ceiling. |
-| `create_webhook` / `rotate_webhook` / `delete_webhook` | Manage ingestion webhooks within your ceiling. |
+| `list_webhooks` / `create_webhook` / `rotate_webhook` / `delete_webhook` | See and manage ingestion webhooks within your endpoint's ceiling. |
 | `add_webhook_route` / `list_webhook_routes` / `remove_webhook_route` | Fan a webhook you own out to additional target endpoints. |
+| `list_webhook_rules` / `set_webhook_rules` / `add_webhook_rule` / `update_webhook_rule` / `move_webhook_rule` / `remove_webhook_rule` / `test_webhook_rules` | Decide, per webhook you own, which queue a delivery lands in — or drop it. Ordered jq rules, first match wins; `test_webhook_rules` dry-runs without saving. |
 | `list_webhook_events` / `get_webhook_event` / `replay_webhook_event` | Inspect / replay stored events. |
 | `list_providers` | See configured event providers. |
-
-There is **no tool that creates a todo** — todos come from verified webhook deliveries, and
-routing is the only way to change which endpoint they land on.
 
 ## Quick recipes
 
@@ -178,7 +178,7 @@ claim_next(queue="reviews")                                # no triage needed; {
 
 **Clear a noise flood the right way:**
 ```
-1. Narrow the source webhook (or hand the human the exact steps if you lack admin).
+1. Stop the flood: a {drop: true} rule on a webhook you own, else narrow the source webhook.
 2. Bulk-ack the current backlog inline: for each noise id, claim then complete.
    Track counts; never echo the payloads.
 ```
