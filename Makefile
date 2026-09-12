@@ -16,6 +16,15 @@
 # @joestump 09/12/2026 - Added the 180-line skill body cap check, after breaching the cap twice
 # in one session and pushing at 181 lines. A lint that checks manifests and links but not the
 # cap lets the next author do the same.
+#
+# @joestump 09/12/2026 - Added the positive assertion that the skill still names the live docs
+# site. Measured gap, not a theoretical one: stripping the switchboard.stump.wtf URL out of
+# SKILL.md entirely left `make lint` exiting 0. The retired-link grep below only fires when a
+# dead URL comes BACK, so a skill carrying no docs link at all passed clean — and the correct
+# URL appearing in that check's error message made it look asserted when it was not. Every
+# guard here now fails in both directions: the banned thing appearing, and the required thing
+# going away. Note the idiom — `grep -q ... || { ...; exit 1; }` as the final command in the
+# loop body. A non-final `! grep -q` is exempt from errexit and would silently assert nothing.
 
 .PHONY: check test lint
 
@@ -38,6 +47,13 @@ lint:
 	@for f in skills/*/SKILL.md; do \
 		n=$$(awk '/^---$$/{c++; next} c>=2' "$$f" | wc -l | tr -d ' '); \
 		[ "$$n" -le 180 ] || { echo "$$f: body is $$n lines, cap is 180"; exit 1; }; \
+	done
+	@echo "==> skill still names the live docs site"
+	@for f in skills/*/SKILL.md; do \
+		grep -q 'switchboard\.stump\.wtf/docs' "$$f" || { \
+			echo "$$f: no link to https://switchboard.stump.wtf/docs/"; \
+			echo "the retired-link check below only catches a dead URL coming BACK; without this"; \
+			echo "assertion a skill with no docs link at all passes clean."; exit 1; }; \
 	done
 	@echo "==> no retired switchboard links"
 	@if grep -rn --exclude-dir=.git --exclude-dir=.claude \
