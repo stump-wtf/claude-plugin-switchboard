@@ -81,9 +81,8 @@ narrower subscription at the producer.
 - If **you manage the webhook** (it shows up in `list_webhooks`), narrow or replace it with
   `create_webhook` / `rotate_webhook`, and **tell the human what you changed.**
 - **Or drop it inside Switchboard, needing nobody's cooperation** — usually the fastest real fix.
-  On a webhook you own, `add_webhook_rule` with a `{drop: true}` action discards the flooding kind
-  before it becomes a todo. Rules are ordered jq, first match wins; dry-run with
-  `test_webhook_rules`, which saves nothing.
+  On a webhook you own, `add_webhook_rule` with `{drop: true}` discards the flooding kind before it
+  becomes a todo. Rules are ordered jq, first match wins; dry-run with `test_webhook_rules`.
 - If the webhook is a **GitHub/Gitea repo webhook you do not manage** (common: the events queue
   is fed by a hook on someone else's repo), narrowing the event list needs **repo-admin +
   `admin:repo_hook`** on that repo. If you lack it, hand the human the exact remediation:
