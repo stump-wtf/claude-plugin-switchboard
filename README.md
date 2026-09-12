@@ -5,8 +5,8 @@ A [Claude Code](https://claude.com/claude-code) plugin for working a
 **correctly** — triage doorbell-driven todos, ack them one at a time, drain a flood without
 running on a treadmill, and narrow the source when one event kind takes over.
 
-Home: https://gitea.stump.rocks/stump.wtf/claude-plugin-switchboard ·
-Mirror: https://github.com/stump-wtf/claude-plugin-switchboard
+Source: https://github.com/stump-wtf/claude-plugin-switchboard (the canonical repository is
+hosted privately and mirrored here).
 
 ## What's in it
 
