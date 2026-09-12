@@ -6,7 +6,7 @@
     "name": "Joe Stump",
     "url": "https://github.com/joestump"
   },
-  "homepage": "https://joestump.github.io/switchboard/",
+  "homepage": "https://switchboard.stump.wtf/docs/",
   "repository": "https://github.com/stump-wtf/claude-plugin-switchboard",
   "license": "MIT",
   "keywords": ["switchboard", "webhooks", "todo-queue", "triage", "mcp", "automation"]

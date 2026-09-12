@@ -1,6 +1,6 @@
 # Proposal: server-authored MCP prompts for Switchboard
 
-Status: **proposal** · Owner: TBD · Target: the Switchboard MCP server (https://github.com/joestump/switchboard)
+Status: **proposal** · Owner: TBD · Target: the Switchboard MCP server (https://switchboard.stump.wtf/docs/)
 
 ## Why
 
