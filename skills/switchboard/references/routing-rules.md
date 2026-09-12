@@ -61,14 +61,14 @@ allowlists there rather than splicing names into every expression:
 ```
 
 **`set_webhook_rules` replaces rules, default and params together. Omitting `params` clears them.**
-That is stump.wtf/switchboard#213. To change rules without losing allowlists, resend the params you
-already have. `add_webhook_rule` / `update_webhook_rule` / `move_webhook_rule` are unaffected.
+Nothing warns you. To change rules without losing allowlists, resend the params you already have.
+`add_webhook_rule` / `update_webhook_rule` / `move_webhook_rule` are unaffected.
 
 ## Rules fail OPEN
 
 **A rule that cannot evaluate is treated as no-match and recorded on the trace — the delivery
 continues.** Fault kinds: `timeout`, `error`, `compile_error`, `budget_exhausted`. That is
-stump.wtf/switchboard#212, and it inverts the intent of every restrictive rule:
+the trap that inverts the intent of every restrictive rule:
 
 - a **`drop` rule that faults stops dropping**, so the noise it suppressed becomes todos again;
 - a **trust rule that faults stops gating**, so the delivery falls through to whatever follows.
@@ -105,16 +105,16 @@ A save that fails names the offending rule and leaves the previous rules in forc
 
 ## Rule packs and lanes are conventions, not features
 
-There is **no pack loader and no lane type**. The packs in the product's `docs/routing/rule-packs/`
-are JSON read only by its Go tests, and a pack is literally a `set_webhook_rules` body minus
-`webhook_id`. A "lane" is just a queue name — the work order's lane field is the decision's queue.
-So there is no import command to look for: installing a pack means calling `set_webhook_rules` with
-its contents.
+There is **no pack loader and no lane type**. A "rule pack" is a checked-in JSON file read only by
+the product's own tests, and it is literally a `set_webhook_rules` body minus `webhook_id`. A
+"lane" is just a queue name — the work order's lane field is the decision's queue. So there is no
+import command to look for: installing a pack means calling `set_webhook_rules` with its contents.
+The published runbook is at https://switchboard.stump.wtf/docs/guides/handoff-lanes.
 
 ## Handing work to another agent
 
-**No MCP tool moves a todo to a peer.** `create_for` is not registered (stump.wtf/switchboard#197),
-and every A2A method returns `UnsupportedOperation` — discovery only, no task intake.
+**No MCP tool moves a todo to a peer.** `create_for` is not registered, and every A2A method
+returns `UnsupportedOperation` — discovery only, no task intake.
 
 **The supported route is Cairn, and it is real but conditional.** It works only where the plumbing
 already exists: a `cairn`-source webhook whose rules route handoffs.

@@ -47,11 +47,12 @@ lint:
 		echo "retired Switchboard docs/repo link above; use https://switchboard.stump.wtf/docs/"; \
 		exit 1; \
 	fi
-	@echo "==> issue references are repo-qualified"
-	@if grep -rnE '(^|[^/[:alnum:]])#[0-9]+' --exclude-dir=.git --exclude-dir=.claude \
-		--include='*.md' skills/ | grep -v 'stump\.wtf/switchboard#' ; then \
-		echo "bare '#NNN' above: in this repo it resolves to THIS repo's issue, not switchboard's."; \
-		echo "Write stump.wtf/switchboard#NNN — the skill is read far from the tracker it cites."; \
+	@echo "==> no issue references (this plugin is public; the tracker is not)"
+	@if grep -rnE '#[0-9]+' --exclude-dir=.git --exclude-dir=.claude \
+		--include='*.md' skills/ ; then \
+		echo "issue reference above. This plugin installs publicly, but switchboard's tracker is"; \
+		echo "private: a bare #NNN resolves to THIS repo, and a qualified one resolves for nobody."; \
+		echo "Describe the behaviour instead, and link https://switchboard.stump.wtf/docs/ if needed."; \
 		exit 1; \
 	fi
 	@echo "OK"
