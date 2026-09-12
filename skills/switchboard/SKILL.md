@@ -86,7 +86,8 @@ narrower subscription at the producer.
   On a webhook you own, `add_webhook_rule` with `{drop: true}` stops the flooding kind becoming a
   todo while still *recording* the delivery. Rules are ordered jq, first match wins, so put the
   drop **above** the rules routing real work, and **dry-run with `test_webhook_rules`** first.
-  Rules **fail open** — a faulting rule stops dropping (#212). See `references/routing-rules.md`.
+  Rules **fail open** — a faulting rule stops dropping (stump.wtf/switchboard#212). See
+  `references/routing-rules.md`.
 - If it is a **repo webhook you do not manage**, narrowing the event list needs **repo-admin +
   `admin:repo_hook`** there. If you lack it, hand the human the exact remediation:
   *Settings -> Webhooks -> the Switchboard hook -> uncheck "Workflow runs" (and other pure-CI
@@ -121,7 +122,8 @@ These matter because Switchboard payloads embed the **entire** upstream webhook 
 
 ## Handing work to another agent
 
-**No MCP tool moves a todo to a peer.** `create_for` is not registered (#197), and every A2A
+**No MCP tool moves a todo to a peer.** `create_for` is unregistered
+(stump.wtf/switchboard#197), and every A2A
 method returns `UnsupportedOperation` — discovery only, no task intake.
 
 **The supported route is Cairn, and it is conditional.** Where a `cairn`-source webhook with
@@ -133,7 +135,7 @@ is allowlisted first, else do the work yourself. See `references/routing-rules.m
 
 **Routing moves the *kind* of work, not the todo in your hand.** `add_webhook_route` fans a
 webhook you own out to another target endpoint for *future* deliveries; same-tenant in practice,
-since cross-human friending is not usable end to end (#197).
+since cross-human friending is not usable end to end (stump.wtf/switchboard#197).
 
 ## Tool reference
 

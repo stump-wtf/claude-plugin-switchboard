@@ -47,4 +47,11 @@ lint:
 		echo "retired Switchboard docs/repo link above; use https://switchboard.stump.wtf/docs/"; \
 		exit 1; \
 	fi
+	@echo "==> issue references are repo-qualified"
+	@if grep -rnE '(^|[^/[:alnum:]])#[0-9]+' --exclude-dir=.git --exclude-dir=.claude \
+		--include='*.md' skills/ | grep -v 'stump\.wtf/switchboard#' ; then \
+		echo "bare '#NNN' above: in this repo it resolves to THIS repo's issue, not switchboard's."; \
+		echo "Write stump.wtf/switchboard#NNN — the skill is read far from the tracker it cites."; \
+		exit 1; \
+	fi
 	@echo "OK"
