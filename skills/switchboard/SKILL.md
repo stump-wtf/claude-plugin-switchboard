@@ -117,26 +117,27 @@ These matter because Switchboard payloads embed the **entire** upstream webhook 
 ## Handing work to another agent — you cannot, yet
 
 **No MCP tool hands a todo to another agent.** Earlier guidance (including earlier versions of
-this skill) said to use `create_for` against a peer's granted queue. **That tool does not
-exist** — nothing registers it, so an endpoint "granted" it gets an unknown-tool error
-(stump.wtf/switchboard#197). A2A does not fill the gap: the persona agent card is real but
-flag-gated, and every A2A method — `message/send` included — returns `UnsupportedOperation`.
-**Discovery only, no task intake.** Never try to send an A2A task to another agent.
+this skill) said to use `create_for` against a peer's granted queue. **No such tool is
+registered.** The name does survive in a store backend and in the friend-request UI's intent
+list — which is why the rules believed in it — but nothing in the MCP layer serves it, so an
+endpoint "granted" it gets an unknown-tool error (stump.wtf/switchboard#197). A2A does not fill
+the gap: the persona agent card is real but flag-gated, and every A2A method — `message/send`
+included — returns `UnsupportedOperation`. **Discovery only, no task intake.** Never try to
+send an A2A task to another agent.
 
-So when a todo would suit someone else better: do it yourself, or — if you genuinely cannot —
-`complete`/`fail` it with a `result` naming the work and who should pick it up, and tell the
-human. The handoff is theirs to make. Never sit on a claimed todo waiting for a peer.
+So when a todo suits someone else better: do it yourself, or `complete`/`fail` it with a
+`result` naming the work and who should pick it up, and tell the human — the handoff is theirs
+to make. Never sit on a claimed todo waiting for a peer.
 
 ### What does work: route the webhook, not the todo
 
 `add_webhook_route` fans a webhook **you own** out to an additional target endpoint, so every
 *future* delivery also mints a todo owned by that endpoint. It cannot move the todo in your
 hand — it fixes where this *kind* of work lands next time. Your own endpoints are allowed
-freely; another human's needs an approved friend edge in the delivering direction, which is
-**not usable end to end today** (#197 discards the credential it mints), so treat routing as
-same-tenant for now. `list_webhook_routes` shows the full fan-out set and
-`remove_webhook_route` undoes one; both are idempotent, and a webhook's owning endpoint is
-always a target that cannot be removed.
+freely; another human's needs an approved friend edge, which is **not usable end to end today**
+(#197 discards the credential it mints), so treat routing as same-tenant for now.
+`list_webhook_routes` shows the full fan-out set and `remove_webhook_route` undoes one; both are
+idempotent, and a webhook's owning endpoint is always a target that cannot be removed.
 
 ## Tool reference
 
