@@ -1,0 +1,3 @@
+# Agent worktrees. Kept out of git so a worktree inside the repo can never be
+# committed, linted, or matched by a `git ls-files` glob.
+.claude/

@@ -1,7 +1,7 @@
 # claude-plugin-switchboard
 
 A [Claude Code](https://claude.com/claude-code) plugin for working a
-[Switchboard](https://joestump.github.io/switchboard/) durable webhook-to-todo queue
+[Switchboard](https://switchboard.stump.wtf/docs/) durable webhook-to-todo queue
 **correctly** — triage doorbell-driven todos, ack them one at a time, drain a flood without
 running on a treadmill, and narrow the source when one event kind takes over.
 

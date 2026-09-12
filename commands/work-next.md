@@ -5,10 +5,13 @@ argument-hint: "[queue] (default: reviews)"
 
 Work the next **actionable** todo on the Switchboard queue `$1` (default `reviews`).
 
-1. `list_todos` (queue, `state: "pending"`, small `limit`) and pick the highest-value
+1. `list_todos` (queue, `state: "pending"`, a `limit` of 200 or less) and pick the highest-value
    **actionable** todo per the `switchboard` skill's taxonomy. Skip noise and informational
    events — do not claim those here.
-2. `claim` it (default lease). If the work is long-running, `heartbeat` before the lease lapses.
+   - Triage is the point of listing first, so prefer this over `claim_next`, which takes whatever
+     is next rather than letting you choose. (`claim_next` is the right call when you just want
+     the next thing, or when several sessions share one endpoint.)
+2. `claim` it (default lease, 300s). If the work is long-running, `heartbeat` before it lapses.
 3. Do the work the todo actually asks for (review the PR, answer the comment, fix the failing
    CI, etc.).
 4. `complete` it with a `result` describing what you did — or, if you truly cannot finish it,
