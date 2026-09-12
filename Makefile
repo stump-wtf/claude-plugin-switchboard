@@ -47,4 +47,12 @@ lint:
 		echo "retired Switchboard docs/repo link above; use https://switchboard.stump.wtf/docs/"; \
 		exit 1; \
 	fi
+	@echo "==> no issue references (this plugin is public; the tracker is not)"
+	@if grep -rnE '#[0-9]+' --exclude-dir=.git --exclude-dir=.claude \
+		--include='*.md' skills/ ; then \
+		echo "issue reference above. This plugin installs publicly, but switchboard's tracker is"; \
+		echo "private: a bare #NNN resolves to THIS repo, and a qualified one resolves for nobody."; \
+		echo "Describe the behaviour instead, and link https://switchboard.stump.wtf/docs/ if needed."; \
+		exit 1; \
+	fi
 	@echo "OK"

@@ -41,7 +41,9 @@ before you act.
      take the next thing; use `list_todos` + `claim` when you need to *choose*.
 3. **Do the work.** On anything long-running, `heartbeat` to extend the lease before it lapses.
 4. **`complete`** with a `result` recording what you did, **or `fail`** with a `result` recording
-   why. `fail` retries while attempts remain, then dead-letters.
+   why. `fail` retries while attempts remain, then dead-letters — but **`state: "failed"` does
+   not mean dead**: a retrying todo sits in `failed` too. Compare `attempt` with `max_attempts`
+   to tell them apart — equal is dead-lettered, below means a retry is still coming.
 
 ### One at a time
 
@@ -82,9 +84,10 @@ narrower subscription at the producer.
   `create_webhook` / `rotate_webhook`, and **tell the human what you changed.**
 - **Or drop it inside Switchboard, needing nobody's cooperation** — usually the fastest real fix.
   On a webhook you own, `add_webhook_rule` with `{drop: true}` stops the flooding kind becoming a
-  todo while still *recording* the delivery, so `list_webhook_events` keeps seeing it. Rules are
-  ordered jq and first match wins, so put the drop **above** the rules routing real work, and
-  **dry-run it with `test_webhook_rules` before saving** — that runs against a stored event.
+  todo while still *recording* the delivery. Rules are ordered jq, first match wins, so put the
+  drop **above** the rules routing real work, and **dry-run with `test_webhook_rules`** first.
+  Rules **fail open** — a rule that cannot evaluate is treated as no-match, so a faulting drop
+  rule silently stops dropping. See `references/routing-rules.md`.
 - If it is a **repo webhook you do not manage**, narrowing the event list needs **repo-admin +
   `admin:repo_hook`** there. If you lack it, hand the human the exact remediation:
   *Settings -> Webhooks -> the Switchboard hook -> uncheck "Workflow runs" (and other pure-CI
@@ -103,7 +106,7 @@ These matter because Switchboard payloads embed the **entire** upstream webhook 
 
    **Never ask for a `limit` above 200.** It does not clamp — an out-of-range value is *reset to
    the default 50*, so `limit: 500` on a flooded queue returns 50 rows and looks like a 50-todo
-   queue. Page with 200 and keep your own count. (stump.wtf/switchboard#198.)
+   queue. Page with 200 and keep your own count.
 
 2. **Every `claim` AND every `complete` echoes the full ~15 KB webhook payload**, so each ack
    costs ~30 KB and draining 150 todos inline is ~5 MB — enough to bury your working context.
@@ -117,34 +120,26 @@ These matter because Switchboard payloads embed the **entire** upstream webhook 
    The drain must run in the **tool-holding session** (the one that received the doorbells). Plan
    for that: narrow the source, then batch inline.
 
-## Handing work to another agent — you cannot, yet
+## Handing work to another agent
 
-**No MCP tool hands a todo to another agent.** Earlier guidance (including earlier versions of
-this skill) said to use `create_for` against a peer's granted queue. **No such tool is
-registered.** The name does survive in a store backend and in the friend-request UI's intent
-list — which is why the rules believed in it — but nothing in the MCP layer serves it, so an
-endpoint "granted" it gets an unknown-tool error (stump.wtf/switchboard#197). A2A does not fill
-the gap: the persona agent card is real but flag-gated, and every A2A method — `message/send`
-included — returns `UnsupportedOperation`. **Discovery only, no task intake.** Never try to
-send an A2A task to another agent.
+**No MCP tool moves a todo to a peer.** `create_for` is unregistered, and every A2A
+method returns `UnsupportedOperation` — discovery only, no task intake.
 
-So when a todo suits someone else better: do it yourself, or `complete`/`fail` it with a
-`result` naming the work and who should pick it up, and tell the human — the handoff is theirs
-to make. Never sit on a claimed todo waiting for a peer.
+**The supported route is Cairn, and it is conditional.** Where a `cairn`-source webhook with
+handoff rules exists, you share a Cairn artifact whose body is a self-contained prompt, tagged
+`handoff` plus a lane, and complete your own todo with a result linking it; a rule matching
+`.artifact.tags` **and the authenticated `.artifact.actor_id`** mints the todo on the lane queue.
+Where that plumbing does not exist the handoff is **silently dropped** — confirm your `actor_id`
+is allowlisted first, else do the work yourself. See `references/routing-rules.md`.
 
-### What does work: route the webhook, not the todo
-
-`add_webhook_route` fans a webhook **you own** out to an additional target endpoint, so every
-*future* delivery also mints a todo owned by that endpoint. It cannot move the todo in your
-hand — it fixes where this *kind* of work lands next time. Your own endpoints are allowed
-freely; another human's needs an approved friend edge, which is **not usable end to end today**
-(#197 discards the credential it mints), so treat routing as same-tenant for now.
-`list_webhook_routes` shows the full fan-out set and `remove_webhook_route` undoes one; both are
-idempotent, and a webhook's owning endpoint is always a target that cannot be removed.
+**Routing moves the *kind* of work, not the todo in your hand.** `add_webhook_route` fans a
+webhook you own out to another target endpoint for *future* deliveries; same-tenant in practice,
+since cross-human friending is not usable end to end — an approved friend grant currently
+discards the credential it mints, so nobody can use it.
 
 ## Tool reference
 
-Every tool registered at switchboard `main` (3b9209c), checked there. Your endpoint advertises
+Every tool registered at switchboard `main` (7e142c3), checked there. Your endpoint advertises
 only the verbs it was granted, so `tools/list` may show fewer, never more — and nothing outside
 this table exists. In particular **no tool creates a todo**: todos arrive as webhook deliveries.
 
@@ -155,7 +150,7 @@ this table exists. In particular **no tool creates a todo**: todos arrive as web
 | `claim_next` | Take the next available todo without an id; answers `{"empty": true}` when idle. |
 | `heartbeat` | Extend a lease on a long job. |
 | `complete` | Ack a todo done, with a `result`. |
-| `fail` | Ack a todo failed (retries with backoff, then dead-letters), with a `result`. |
+| `fail` | Ack a todo failed, with a `result`. Retries with backoff, then dead-letters — both read as `failed`; `attempt` vs `max_attempts` tells them apart. |
 | `list_webhooks` / `create_webhook` / `rotate_webhook` / `delete_webhook` | See and manage ingestion webhooks within your endpoint's ceiling. |
 | `add_webhook_route` / `list_webhook_routes` / `remove_webhook_route` | Fan a webhook you own out to additional target endpoints. |
 | `list_webhook_rules` / `set_webhook_rules` / `add_webhook_rule` / `update_webhook_rule` / `move_webhook_rule` / `remove_webhook_rule` / `test_webhook_rules` | Decide, per webhook you own, which queue a delivery lands in — or drop it. Ordered jq rules, first match wins; `test_webhook_rules` dry-runs without saving. |
