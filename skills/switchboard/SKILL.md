@@ -81,12 +81,12 @@ narrower subscription at the producer.
 - If **you manage the webhook** (it shows up in `list_webhooks`), narrow or replace it with
   `create_webhook` / `rotate_webhook`, and **tell the human what you changed.**
 - **Or drop it inside Switchboard, needing nobody's cooperation** — usually the fastest real fix.
-  On a webhook you own, `add_webhook_rule` with `{drop: true}` discards the flooding kind before it
-  becomes a todo. Rules are ordered jq, first match wins. **Dry-run it with `test_webhook_rules`
-  before you save** — that evaluates against one of the webhook's stored events and saves nothing.
-- If the webhook is a **GitHub/Gitea repo webhook you do not manage** (common: the events queue
-  is fed by a hook on someone else's repo), narrowing the event list needs **repo-admin +
-  `admin:repo_hook`** on that repo. If you lack it, hand the human the exact remediation:
+  On a webhook you own, `add_webhook_rule` with `{drop: true}` stops the flooding kind becoming a
+  todo while still *recording* the delivery, so `list_webhook_events` keeps seeing it. Rules are
+  ordered jq and first match wins, so put the drop **above** the rules routing real work, and
+  **dry-run it with `test_webhook_rules` before saving** — that runs against a stored event.
+- If it is a **repo webhook you do not manage**, narrowing the event list needs **repo-admin +
+  `admin:repo_hook`** there. If you lack it, hand the human the exact remediation:
   *Settings -> Webhooks -> the Switchboard hook -> uncheck "Workflow runs" (and other pure-CI
   events); keep Pull requests, PR reviews, PR review comments, Issue comments, Issues.*
 - A one-time bulk drain still clears the backlog — just don't mistake it for the fix.
