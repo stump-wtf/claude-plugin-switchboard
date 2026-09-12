@@ -42,8 +42,8 @@ before you act.
 3. **Do the work.** On anything long-running, `heartbeat` to extend the lease before it lapses.
 4. **`complete`** with a `result` recording what you did, **or `fail`** with a `result` recording
    why. `fail` retries while attempts remain, then dead-letters — but **`state: "failed"` does
-   not mean dead**: a retrying todo sits in `failed` too, and `list_todos` returns nothing that
-   tells the two apart (#214). Never read a `failed` list as a list of dead letters.
+   not mean dead**: a retrying todo sits in `failed` too. Compare `attempt` with `max_attempts`
+   to tell them apart — equal is dead-lettered, below means a retry is still coming.
 
 ### One at a time
 
@@ -148,7 +148,7 @@ this table exists. In particular **no tool creates a todo**: todos arrive as web
 | `claim_next` | Take the next available todo without an id; answers `{"empty": true}` when idle. |
 | `heartbeat` | Extend a lease on a long job. |
 | `complete` | Ack a todo done, with a `result`. |
-| `fail` | Ack a todo failed, with a `result`. Retries with backoff, then dead-letters — both states read as `failed` (#214). |
+| `fail` | Ack a todo failed, with a `result`. Retries with backoff, then dead-letters — both read as `failed`; `attempt` vs `max_attempts` tells them apart. |
 | `list_webhooks` / `create_webhook` / `rotate_webhook` / `delete_webhook` | See and manage ingestion webhooks within your endpoint's ceiling. |
 | `add_webhook_route` / `list_webhook_routes` / `remove_webhook_route` | Fan a webhook you own out to additional target endpoints. |
 | `list_webhook_rules` / `set_webhook_rules` / `add_webhook_rule` / `update_webhook_rule` / `move_webhook_rule` / `remove_webhook_rule` / `test_webhook_rules` | Decide, per webhook you own, which queue a delivery lands in — or drop it. Ordered jq rules, first match wins; `test_webhook_rules` dry-runs without saving. |
