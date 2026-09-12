@@ -75,11 +75,15 @@ is auditable.
 
 If **one event kind is flooding** the queue (classic offender: `workflow_run`, which can be
 70%+ of a CI-heavy repo's events), draining it by hand is a treadmill: CI keeps firing new ones.
-**Narrow the subscription at the source, then drain what remains.**
+**Stop it being created, then drain what remains** — via a Switchboard routing rule, or a
+narrower subscription at the producer.
 
-- If **you manage the webhook** (it shows up in `list_webhooks` within your endpoint's ceiling),
-  narrow or replace it with `create_webhook` / `rotate_webhook`, and **tell the human what you
-  changed.**
+- If **you manage the webhook** (it shows up in `list_webhooks`), narrow or replace it with
+  `create_webhook` / `rotate_webhook`, and **tell the human what you changed.**
+- **Or drop it inside Switchboard, needing nobody's cooperation** — usually the fastest real fix.
+  On a webhook you own, `add_webhook_rule` with a `{drop: true}` action discards the flooding kind
+  before it becomes a todo. Rules are ordered jq, first match wins; dry-run with
+  `test_webhook_rules`, which saves nothing.
 - If the webhook is a **GitHub/Gitea repo webhook you do not manage** (common: the events queue
   is fed by a hook on someone else's repo), narrowing the event list needs **repo-admin +
   `admin:repo_hook`** on that repo. If you lack it, hand the human the exact remediation:
@@ -153,14 +157,11 @@ so `tools/list` may show fewer, never more. Anything absent does not exist — i
 | `heartbeat` | Extend a lease on a long job. |
 | `complete` | Ack a todo done, with a `result`. |
 | `fail` | Ack a todo failed (retries with backoff, then dead-letters), with a `result`. |
-| `list_webhooks` | See self-managed webhooks + your endpoint's ceiling. |
-| `create_webhook` / `rotate_webhook` / `delete_webhook` | Manage ingestion webhooks within your ceiling. |
+| `list_webhooks` / `create_webhook` / `rotate_webhook` / `delete_webhook` | See and manage ingestion webhooks within your endpoint's ceiling. |
 | `add_webhook_route` / `list_webhook_routes` / `remove_webhook_route` | Fan a webhook you own out to additional target endpoints. |
+| `list_webhook_rules` / `set_webhook_rules` / `add_webhook_rule` / `update_webhook_rule` / `move_webhook_rule` / `remove_webhook_rule` / `test_webhook_rules` | Decide, per webhook you own, which queue a delivery lands in — or drop it. Ordered jq rules, first match wins; `test_webhook_rules` dry-runs without saving. |
 | `list_webhook_events` / `get_webhook_event` / `replay_webhook_event` | Inspect / replay stored events. |
 | `list_providers` | See configured event providers. |
-
-There is **no tool that creates a todo** — todos come from verified webhook deliveries, and
-routing is the only way to change which endpoint they land on.
 
 ## Quick recipes
 
@@ -178,7 +179,7 @@ claim_next(queue="reviews")                                # no triage needed; {
 
 **Clear a noise flood the right way:**
 ```
-1. Narrow the source webhook (or hand the human the exact steps if you lack admin).
+1. Stop the flood: a {drop: true} rule on a webhook you own, else narrow the source webhook.
 2. Bulk-ack the current backlog inline: for each noise id, claim then complete.
    Track counts; never echo the payloads.
 ```
