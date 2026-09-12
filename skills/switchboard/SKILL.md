@@ -82,7 +82,8 @@ narrower subscription at the producer.
   `create_webhook` / `rotate_webhook`, and **tell the human what you changed.**
 - **Or drop it inside Switchboard, needing nobody's cooperation** — usually the fastest real fix.
   On a webhook you own, `add_webhook_rule` with `{drop: true}` discards the flooding kind before it
-  becomes a todo. Rules are ordered jq, first match wins; dry-run with `test_webhook_rules`.
+  becomes a todo. Rules are ordered jq, first match wins. **Dry-run it with `test_webhook_rules`
+  before you save** — that evaluates against one of the webhook's stored events and saves nothing.
 - If the webhook is a **GitHub/Gitea repo webhook you do not manage** (common: the events queue
   is fed by a hook on someone else's repo), narrowing the event list needs **repo-admin +
   `admin:repo_hook`** on that repo. If you lack it, hand the human the exact remediation:
@@ -104,12 +105,11 @@ These matter because Switchboard payloads embed the **entire** upstream webhook 
    the default 50*, so `limit: 500` on a flooded queue returns 50 rows and looks like a 50-todo
    queue. Page with 200 and keep your own count. (stump.wtf/switchboard#198.)
 
-2. **Every `claim` AND every `complete` echoes the full ~15 KB webhook payload.** So each ack
-   costs ~30 KB of context. Draining 150 todos inline is ~5 MB — enough to bury your working
-   context. Mitigations, in order of preference:
-   - **Narrow the source first** so there is little left to drain.
-   - Drain in **batches within this session**, and rely on the harness summarizing older tool
-     results. Do NOT paste or summarize the payloads yourself; fire the calls and track counts.
+2. **Every `claim` AND every `complete` echoes the full ~15 KB webhook payload**, so each ack
+   costs ~30 KB and draining 150 todos inline is ~5 MB — enough to bury your working context.
+   Mitigations in order: **stop the flood at source first** so there is little left to drain, then
+   drain in **batches within this session**, relying on the harness to summarize older tool
+   results. Never paste or summarize the payloads yourself; fire the calls and track counts.
 
 3. **Subagents do NOT inherit the Switchboard MCP tools** (observed: `ToolSearch` finds nothing,
    direct calls return "No such tool available"). So the tempting move — "offload the bulk drain
@@ -144,9 +144,9 @@ idempotent, and a webhook's owning endpoint is always a target that cannot be re
 
 ## Tool reference
 
-This is the whole agent-facing surface: your endpoint advertises only the verbs it was granted,
-so `tools/list` may show fewer, never more. Anything absent does not exist — in particular
-**no tool creates a todo**; todos arrive only as verified webhook deliveries.
+Every tool registered at switchboard `main` (3b9209c), checked there. Your endpoint advertises
+only the verbs it was granted, so `tools/list` may show fewer, never more — and nothing outside
+this table exists. In particular **no tool creates a todo**: todos arrive as webhook deliveries.
 
 | Tool | Use |
 |---|---|
