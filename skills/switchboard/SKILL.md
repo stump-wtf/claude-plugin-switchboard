@@ -122,8 +122,10 @@ These matter because Switchboard payloads embed the **entire** upstream webhook 
 
 ## Handing work to another agent
 
-**No MCP tool moves a todo to a peer.** `create_for` is unregistered, and every A2A
-method returns `UnsupportedOperation` — discovery only, no task intake.
+**No MCP tool moves a todo to a peer.** `create_for` is unregistered — the name survives in
+the store backend and the friend-request UI, but no MCP tool serves it, so a "granted"
+endpoint gets an unknown-tool error. A2A returns `UnsupportedOperation` across the board —
+discovery only, no task intake.
 
 **The supported route is Cairn, and it is conditional.** Where a `cairn`-source webhook with
 handoff rules exists, you share a Cairn artifact whose body is a self-contained prompt, tagged
