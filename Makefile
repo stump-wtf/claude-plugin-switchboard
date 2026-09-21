@@ -25,6 +25,11 @@
 # guard here now fails in both directions: the banned thing appearing, and the required thing
 # going away. Note the idiom — `grep -q ... || { ...; exit 1; }` as the final command in the
 # loop body. A non-final `! grep -q` is exempt from errexit and would silently assert nothing.
+#
+# @joestump 09/21/2026 - Added the reference-file cross-check. The skill body sits at its line
+# cap, so behaviour now lives in references/*.md behind a pointer; a renamed or deleted
+# reference would leave the pointer dangling, and an unreferenced one is never loaded. Both
+# directions fail.
 
 .PHONY: check test lint
 
@@ -54,6 +59,17 @@ lint:
 			echo "$$f: no link to https://switchboard.stump.wtf/docs/"; \
 			echo "the retired-link check below only catches a dead URL coming BACK; without this"; \
 			echo "assertion a skill with no docs link at all passes clean."; exit 1; }; \
+	done
+	@echo "==> skill references resolve, and every reference is pointed at"
+	@for f in skills/*/SKILL.md; do \
+		d=$$(dirname "$$f"); \
+		for r in $$(grep -oE 'references/[a-z0-9-]+\.md' "$$f" | sort -u); do \
+			[ -f "$$d/$$r" ] || { echo "$$f: points at $$r, which does not exist"; exit 1; }; \
+		done; \
+		for r in $$d/references/*.md; do \
+			[ -e "$$r" ] || continue; \
+			grep -q "references/$$(basename "$$r")" "$$f" || { echo "$$r: not referenced from $$f"; exit 1; }; \
+		done; \
 	done
 	@echo "==> no retired switchboard links"
 	@if grep -rn --exclude-dir=.git --exclude-dir=.claude \

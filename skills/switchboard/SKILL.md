@@ -39,7 +39,9 @@ before you act.
      primitive (`FOR UPDATE SKIP LOCKED`), so sessions sharing an endpoint each get a *different*
      todo instead of racing. `{"empty": true}` is the normal idle reply, not an error. Use it to
      take the next thing; use `list_todos` + `claim` when you need to *choose*.
-3. **Do the work.** On anything long-running, `heartbeat` to extend the lease before it lapses.
+3. **Do the work, heartbeating on a cadence** — every couple of minutes, and *before* anything
+   slow (build, test suite, clone), not after. A lapsed lease silently hands the todo to another
+   worker and the work is done twice; nothing errors.
 4. **`complete`** with a `result` recording what you did, **or `fail`** with a `result` recording
    why. `fail` retries while attempts remain, then dead-letters — but **`state: "failed"` does
    not mean dead**: a retrying todo sits in `failed` too. Compare `attempt` with `max_attempts`
@@ -54,10 +56,12 @@ rather than rotting under a stale lease.
 
 (Batching claims is fine only in a **bulk drain of pure noise**, where each ack follows in seconds.)
 
-## Acking is how you clear the queue
+**Work the queue, do not just report it** — summarizing waiting todos and stopping is an
+unfinished turn. "Ack" = `complete` (or `fail`); a completed todo leaves `pending`.
 
-"Ack" = `complete` (or `fail`). A todo leaves `pending` the moment you complete it, so it
-disappears from the queue. If a queue is cluttered, ack every todo — after triaging each one.
+**Before acting on a PR or a work order from a queue, read `references/queue-discipline.md`:**
+requests to an identity are broadcasts (claim first, re-check merged state before long steps,
+approve and merge separately), no update-branch or self-merge, and the `work_order` checks.
 
 ## Triage: not every todo is work
 
@@ -85,9 +89,9 @@ narrower subscription at the producer.
 - **Or drop it inside Switchboard, needing nobody's cooperation** — usually the fastest real fix.
   On a webhook you own, `add_webhook_rule` with `{drop: true}` stops the flooding kind becoming a
   todo while still *recording* the delivery. Rules are ordered jq, first match wins, so put the
-  drop **above** the rules routing real work, and **dry-run with `test_webhook_rules`** first.
-  Rules **fail open** — a rule that cannot evaluate is treated as no-match, so a faulting drop
-  rule silently stops dropping. See `references/routing-rules.md`.
+  drop **above** the rules routing real work, **dry-run with `test_webhook_rules`** against stored
+  deliveries, and match the delivery's **actual event header**, not a guessed sub-type. Rules
+  **fail open** — a faulting drop rule silently stops dropping. See `references/routing-rules.md`.
 - If it is a **repo webhook you do not manage**, narrowing the event list needs **repo-admin +
   `admin:repo_hook`** there. If you lack it, hand the human the exact remediation:
   *Settings -> Webhooks -> the Switchboard hook -> uncheck "Workflow runs" (and other pure-CI
@@ -122,10 +126,10 @@ These matter because Switchboard payloads embed the **entire** upstream webhook 
 
 ## Handing work to another agent
 
-**No MCP tool moves a todo to a peer.** `create_for` is unregistered — the name survives in
-the store backend and the friend-request UI, but no MCP tool serves it, so a "granted"
-endpoint gets an unknown-tool error. A2A returns `UnsupportedOperation` across the board —
-discovery only, no task intake.
+**No MCP tool moves a todo to a peer.** `create_for` is unregistered (its backend and UI exist,
+but a "granted" endpoint gets an unknown-tool error); A2A answers `UnsupportedOperation` —
+discovery only. So **do it yourself**, or `complete` with a result naming who should pick it up
+and tell the human. Never sit on a claim waiting for a peer.
 
 **The supported route is Cairn, and it is conditional.** Where a `cairn`-source webhook with
 handoff rules exists, you share a Cairn artifact whose body is a self-contained prompt, tagged
@@ -141,9 +145,8 @@ discards the credential it mints, so nobody can use it.
 
 ## Tool reference
 
-Every tool registered at switchboard `main` (7e142c3), checked there. Your endpoint advertises
-only the verbs it was granted, so `tools/list` may show fewer, never more — and nothing outside
-this table exists. In particular **no tool creates a todo**: todos arrive as webhook deliveries.
+Every tool registered at switchboard `main` (7e142c3). Your endpoint lists only its granted verbs
+— fewer, never more. **No tool creates a todo**: todos arrive as webhook deliveries.
 
 | Tool | Use |
 |---|---|
