@@ -61,7 +61,8 @@ unfinished turn. "Ack" = `complete` (or `fail`); a completed todo leaves `pendin
 
 **Before acting on a PR or a work order from a queue, read `references/queue-discipline.md`:**
 requests to an identity are broadcasts (claim first, re-check merged state before long steps,
-approve and merge separately), no update-branch or self-merge, and the `work_order` checks.
+approve and merge separately), the forge's rebase update only on your own PR, no self-merge,
+and the `work_order` checks.
 
 ## Triage: not every todo is work
 
