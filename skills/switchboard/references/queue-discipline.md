@@ -67,8 +67,9 @@ fixes the PR its todo names on that PR's own branch:
   the PR is not yours. Never push to a third-party contributor's branch, and never force-push
   `main` or a protected branch.
 - **The merge gate** is the branch being up to date with its base and CI green on that head.
-- **Never merge a PR you authored**, and never arm auto-merge on it. A different identity reviews
-  it, approves on green, and merges.
+- **Never merge a PR you authored** by hand. A different identity reviews it and approves on
+  green. Either of you may arm auto-merge, since the forge still waits for that approval and green
+  CI.
 
 ## Handing work off
 
