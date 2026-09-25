@@ -16,8 +16,8 @@ Work the next **actionable** todo on the Switchboard queue `$1` (default `review
 3. Do the work the todo actually asks for (review the PR, answer the comment, fix the failing
    CI, etc.). For a PR, re-read its `state` / `merged` before any long step and stop if it has
    landed. If the todo carries a `work_order` or touches a PR, follow
-   `skills/switchboard/references/queue-discipline.md` (work-order checks, no update-branch, no
-   self-merge, approve and merge as separate motions).
+   `skills/switchboard/references/queue-discipline.md` (work-order checks, fix the PR on its own
+   branch, no self-merge, approve and merge as separate motions).
 4. `complete` it with a `result` describing what you did — or, if you truly cannot finish it,
    `fail` it with a `result` explaining why (so it requeues rather than rotting under a stale
    lease). Never leave it claimed and abandoned.

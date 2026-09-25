@@ -55,19 +55,18 @@ or merge lands on a PR that already moved — or lands while the other is still 
 
 ## Pull requests from the queue
 
-A queue-driven session acts on PRs with nobody watching, so a doorbell for a review request, a push,
-or a CI result must never become a history edit on someone else's branch:
+A queue-driven session acts on PRs with nobody watching. PR branches are mutable, so the session
+fixes the PR its todo names on that PR's own branch:
 
-- **Never merge the base branch into a PR branch**, and never use the forge's update-branch on a PR
-  you did not author. A PR that is behind or conflicted is its author's to fix; say so in a comment.
-- **On a PR you did author**, bring it current with the forge's **rebase** update — Gitea
-  `POST …/pulls/{n}/update?style=rebase`, GitHub `gh pr update-branch --rebase`. Both are
-  server-side and replay only that PR's commits. Never the merge style (`?style=merge`, a bare
-  `gh pr update-branch`, or the merge-only REST `PUT …/update-branch`), which pushes a
-  `Merge branch 'main'` commit, and never a force-push from your checkout.
-- **Never push to a PR you did not author** — except as its *requested reviewer*, on a repo you own,
-  with your fix commits separate from the author's and a summary comment saying what you changed and
-  why. Never a merge commit, a rebase, or a force-push.
+- **Bring a behind or conflicting PR current on its own branch**, on a repo you own, whether you
+  authored it or are its requested reviewer: the forge's update-branch (Gitea
+  `POST …/pulls/{n}/update?style=rebase`, or `style=merge` when the rebase refuses; GitHub
+  `gh pr update-branch --rebase`), or merge the base branch in, resolve, and push. **Never replay
+  it** onto a fresh branch or open a replacement PR.
+- **Push fixes as separate commits** with a summary comment saying what you changed and why when
+  the PR is not yours. Never push to a third-party contributor's branch, and never force-push
+  `main` or a protected branch.
+- **The merge gate** is the branch being up to date with its base and CI green on that head.
 - **Never merge a PR you authored**, and never arm auto-merge on it. A different identity reviews
   it, approves on green, and merges.
 
