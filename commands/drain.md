@@ -1,5 +1,5 @@
 ---
-description: Drain a Switchboard noise flood the right way — narrow the source first, then bulk-ack the backlog inline.
+description: Drain a Switchboard noise flood the right way — drop the flooding kind at the source first, then bulk-ack the backlog inline.
 argument-hint: "[queue] (default: reviews)"
 ---
 
@@ -7,9 +7,14 @@ Clear a **noise flood** on the Switchboard queue `$1` (default `reviews`). Follo
 skipping step 1 turns this into a treadmill.
 
 1. **Fix the source first.** Identify the flooding event kind (usually `workflow_run` CI events).
-   - If you manage the webhook (`list_webhooks` shows it in your ceiling), narrow/replace it with
-     `create_webhook` / `rotate_webhook` and state what you changed.
-   - If it's a repo webhook you don't manage, you likely lack `admin:repo_hook`. Hand the human
+   - **Add a drop rule.** If you own the webhook (`list_webhooks` shows it), `add_webhook_rule`
+     with `{drop: true}` matching that kind, placed **above** the rules that route real work
+     (first match wins). Dry-run it with `test_webhook_rules` against stored deliveries first,
+     and match the delivery's actual event header. The delivery is still recorded; it just stops
+     becoming a todo. State what you added. (`create_webhook` / `rotate_webhook` cannot narrow —
+     neither takes an event filter.)
+   - **Or narrow at the producer**, with the forge's own event checkboxes. If it's a repo webhook
+     you don't manage, you likely lack `admin:repo_hook`. Hand the human
      the exact fix: *repo Settings -> Webhooks -> the Switchboard hook -> uncheck "Workflow runs"
      and other pure-CI events; keep Pull requests, PR reviews, PR review comments, Issue
      comments, Issues.* Then continue to step 2 to clear the current backlog.

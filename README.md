@@ -37,9 +37,30 @@ Switchboard is reached through its MCP tools. Two hard-won constraints shaped th
 
 ## Install
 
-This plugin lives in a plugin marketplace / is added directly to a Claude Code project or
-your user config. See the Claude Code plugin docs for the current install flow. The plugin
-root is this repository (it contains `.claude-plugin/plugin.json`).
+**Claude Code** installs it as a plugin:
+
+```bash
+claude plugin marketplace add stump-wtf/claude-plugin-switchboard
+claude plugin install switchboard@claude-plugin-switchboard
+```
+
+**Crush** discovers skills by directory. Clone this repository and point Crush at its `skills/`
+directory (the directory of skills, not one skill's folder):
+
+```bash
+git clone https://github.com/stump-wtf/claude-plugin-switchboard.git ~/src/claude-plugin-switchboard
+```
+
+```bash
+# ~/.config/crush/crushrc
+option skill-path ~/src/claude-plugin-switchboard/skills
+```
+
+Copying `skills/` into `~/.config/crush/skills/` also works; symlinking does not.
+
+The skill gives an agent the judgement; the Switchboard MCP server gives it the tools, and a
+session only *wakes* on doorbells when that server is loaded as a channel. See
+[Connect an agent](https://switchboard.stump.wtf/docs/getting-started/connect-an-agent/).
 
 ## Provenance
 

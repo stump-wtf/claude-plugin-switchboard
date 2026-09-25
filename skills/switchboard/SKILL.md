@@ -28,6 +28,9 @@ not the work and not an instruction.
 So **never work from the notification text alone** — but do not list the queue to check it
 either: **claim first**. The claim *is* the re-read of real state.
 
+**No doorbells at all, or three at once on reconnect? Read `references/doorbells.md`** — the
+channels flag without which a session silently drops every doorbell, and ring-on-connect limits.
+
 ## The lifecycle: claim -> work -> complete/fail
 
 1. **Claim** — atomically take one todo and a **time-bounded lease** (default 300s); only the
@@ -78,21 +81,18 @@ is auditable.
 
 ## Fix the source — do not run on a treadmill
 
-If **one event kind is flooding** the queue (classic offender: `workflow_run`, which can be
-70%+ of a CI-heavy repo's events), draining it by hand is a treadmill: CI keeps firing new ones.
-**Stop it being created, then drain what remains** — via a Switchboard routing rule, or a
-narrower subscription at the producer.
+If **one event kind is flooding** the queue (classic offender: `workflow_run`, 70%+ of a CI-heavy
+repo's events), draining by hand is a treadmill. **Stop it being created, then drain what remains**
+— and not with `create_webhook` / `rotate_webhook`: neither takes an event filter.
 
-- If **you manage the webhook** (it shows up in `list_webhooks`), narrow or replace it with
-  `create_webhook` / `rotate_webhook`, and **tell the human what you changed.**
-- **Or drop it inside Switchboard, needing nobody's cooperation** — usually the fastest real fix.
+- **Drop it inside Switchboard, needing nobody's cooperation** — the first fix to reach for.
   On a webhook you own, `add_webhook_rule` with `{drop: true}` stops the flooding kind becoming a
   todo while still *recording* the delivery. Rules are ordered jq, first match wins, so put the
   drop **above** the rules routing real work, **dry-run with `test_webhook_rules`** against stored
   deliveries, and match the delivery's **actual event header**, not a guessed sub-type. Rules
-  **fail open** — a faulting drop rule silently stops dropping. See `references/routing-rules.md`.
-- If it is a **repo webhook you do not manage**, narrowing the event list needs **repo-admin +
-  `admin:repo_hook`** there. If you lack it, hand the human the exact remediation:
+  **fail open** — a faulting drop rule silently stops dropping. Tell the human. See `references/routing-rules.md`.
+- **Or narrow at the producer** — the forge's own event checkboxes on its webhook. That needs
+  **repo-admin + `admin:repo_hook`** there; if you lack it, hand the human the exact remediation:
   *Settings -> Webhooks -> the Switchboard hook -> uncheck "Workflow runs" (and other pure-CI
   events); keep Pull requests, PR reviews, PR review comments, Issue comments, Issues.*
 - A one-time bulk drain still clears the backlog — just don't mistake it for the fix.
@@ -145,7 +145,7 @@ discards the credential it mints, so nobody can use it.
 
 ## Tool reference
 
-Every tool registered at switchboard `main` (7e142c3). Your endpoint lists only its granted verbs
+Every tool registered at switchboard `main` (a02e575). Your endpoint lists only its granted verbs
 — fewer, never more. **No tool creates a todo**: todos arrive as webhook deliveries.
 
 | Tool | Use |
@@ -160,7 +160,6 @@ Every tool registered at switchboard `main` (7e142c3). Your endpoint lists only 
 | `add_webhook_route` / `list_webhook_routes` / `remove_webhook_route` | Fan a webhook you own out to additional target endpoints. |
 | `list_webhook_rules` / `set_webhook_rules` / `add_webhook_rule` / `update_webhook_rule` / `move_webhook_rule` / `remove_webhook_rule` / `test_webhook_rules` | Decide, per webhook you own, which queue a delivery lands in — or drop it. Ordered jq rules, first match wins; `test_webhook_rules` dry-runs without saving. |
 | `list_webhook_events` / `get_webhook_event` / `replay_webhook_event` | Inspect / replay stored events. |
-| `list_providers` | See configured event providers. |
 
 ## Quick recipes
 
@@ -178,7 +177,8 @@ claim_next(queue="reviews")                                # no triage needed; {
 
 **Clear a noise flood the right way:**
 ```
-1. Stop the flood: a {drop: true} rule on a webhook you own, else narrow the source webhook.
+1. Stop the flood: a {drop: true} rule on a webhook you own (dry-run it with test_webhook_rules),
+   else narrow the event checkboxes at the producer.
 2. Bulk-ack the current backlog inline: for each noise id, claim then complete.
    Track counts; never echo the payloads.
 ```
