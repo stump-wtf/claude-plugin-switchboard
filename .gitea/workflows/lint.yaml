@@ -14,5 +14,11 @@ jobs:
     steps:
       - name: Checkout
         uses: actions/checkout@v4
+      - name: Install PyYAML
+        # The issue-form check parses .github/ISSUE_TEMPLATE, and the runner image lacks PyYAML.
+        run: >-
+          python3 -c 'import yaml' 2>/dev/null
+          || python3 -m pip install --quiet pyyaml
+          || python3 -m pip install --quiet --break-system-packages pyyaml
       - name: make lint
         run: make lint
