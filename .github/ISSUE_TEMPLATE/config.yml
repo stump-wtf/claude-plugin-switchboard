@@ -1,0 +1,11 @@
+blank_issues_enabled: false
+contact_links:
+  - name: Bug in the Switchboard service
+    url: https://github.com/stump-wtf/switchboard/issues
+    about: The server, its MCP tools, doorbells, webhooks, or the web board. This repository only holds the agent guidance.
+  - name: Switchboard documentation
+    url: https://switchboard.stump.wtf/docs/
+    about: Setup, connecting an agent, routing rules, and troubleshooting.
+  - name: Security problem
+    url: https://github.com/stump-wtf/claude-plugin-switchboard/security/policy
+    about: Do not open a public issue. Read the security policy first.

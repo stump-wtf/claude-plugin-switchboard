@@ -62,6 +62,13 @@ The skill gives an agent the judgement; the Switchboard MCP server gives it the 
 session only *wakes* on doorbells when that server is loaded as a channel. See
 [Connect an agent](https://switchboard.stump.wtf/docs/getting-started/connect-an-agent/).
 
+## Reporting problems
+
+Report problems with the skill or commands in
+[GitHub Issues](https://github.com/stump-wtf/claude-plugin-switchboard/issues/new/choose). Bugs in
+the Switchboard service go to [its tracker](https://github.com/stump-wtf/switchboard/issues), and
+security problems follow [SECURITY.md](SECURITY.md).
+
 ## Provenance
 
 Distilled from a real session that triaged a 186-todo `reviews` queue flooded 71% with

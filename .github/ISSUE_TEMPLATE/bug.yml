@@ -1,0 +1,60 @@
+name: Bug report
+description: The switchboard skill or a /switchboard command told an agent to do the wrong thing.
+labels: [bug]
+body:
+  - type: markdown
+    attributes:
+      value: |
+        This repository holds the **guidance** (skill and slash commands) for working a Switchboard
+        queue. A bug in the Switchboard service itself belongs in
+        https://github.com/stump-wtf/switchboard/issues. Never paste a token, a webhook secret, or a
+        todo payload you would not publish.
+  - type: input
+    id: plugin-version
+    attributes:
+      label: Plugin version or commit
+      description: "`claude plugin list`, or the marketplace commit SHA, or the commit your Crush `skill-path` checkout is at."
+      placeholder: "switchboard 0.2.0 (7c6d2e7)"
+    validations:
+      required: true
+  - type: input
+    id: client
+    attributes:
+      label: Client and version
+      description: "`claude --version`, or your Crush version and whether it is the joestump-agent fork."
+      placeholder: "Claude Code 2.1.270"
+    validations:
+      required: true
+  - type: input
+    id: server-version
+    attributes:
+      label: Switchboard server version
+      description: The Switchboard server or `switchboard` binary version the agent was talking to, if you know it.
+      placeholder: "switchboard.stump.wtf, or v0.x.y self-hosted"
+  - type: dropdown
+    id: surface
+    attributes:
+      label: Skill or command involved
+      options:
+        - switchboard skill
+        - /switchboard:triage
+        - /switchboard:work-next
+        - /switchboard:drain
+        - README or install instructions
+        - Other
+    validations:
+      required: true
+  - type: textarea
+    id: expected
+    attributes:
+      label: What the skill says
+      description: Quote or link the part of the skill or command that applies.
+    validations:
+      required: true
+  - type: textarea
+    id: actual
+    attributes:
+      label: What the agent did
+      description: The tool calls it made and what came back. Redact payloads and credentials.
+    validations:
+      required: true

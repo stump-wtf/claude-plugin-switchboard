@@ -30,6 +30,12 @@
 # cap, so behaviour now lives in references/*.md behind a pointer; a renamed or deleted
 # reference would leave the pointer dangling, and an unreferenced one is never loaded. Both
 # directions fail.
+#
+# @joestump 09/25/2026 - Added the public-intake checks. The GitHub mirror takes issues from
+# outside reporters, so its issue forms must parse (GitHub silently hides a form that does not,
+# and the chooser falls back to nothing since blank issues are off), and nothing a reader sees
+# may link the private Gitea: a link there looks fine to us and is dead for everyone else.
+# .gitea/ is exempt because its workflows run on that Gitea.
 
 .PHONY: check test lint
 
@@ -85,6 +91,19 @@ lint:
 		echo "issue reference above. This plugin installs publicly, but switchboard's tracker is"; \
 		echo "private: a bare #NNN resolves to THIS repo, and a qualified one resolves for nobody."; \
 		echo "Describe the behaviour instead, and link https://switchboard.stump.wtf/docs/ if needed."; \
+		exit 1; \
+	fi
+	@echo "==> issue forms parse"
+	@python3 -c 'import yaml' 2>/dev/null || { echo "PyYAML is required to check .github/ISSUE_TEMPLATE"; exit 1; }
+	@for f in .github/ISSUE_TEMPLATE/*.yml; do \
+		python3 -c 'import sys, yaml; d = yaml.safe_load(open(sys.argv[1])); assert isinstance(d, dict), "not a mapping"' "$$f" \
+			|| { echo "$$f: does not parse as a YAML mapping"; exit 1; }; \
+	done
+	@grep -q '^blank_issues_enabled: false$$' .github/ISSUE_TEMPLATE/config.yml \
+		|| { echo ".github/ISSUE_TEMPLATE/config.yml: blank issues must stay disabled"; exit 1; }
+	@echo "==> no private Gitea links in anything a public reader sees"
+	@if git grep -n 'gitea\.stump\.rocks' -- . ':!.gitea' ':!Makefile' ; then \
+		echo "private Gitea URL above. This repository is read on GitHub; link the GitHub copy."; \
 		exit 1; \
 	fi
 	@echo "OK"
