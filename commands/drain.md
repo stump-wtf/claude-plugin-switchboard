@@ -20,7 +20,7 @@ skipping step 1 turns this into a treadmill.
    `{"triage":"noise","reason":"CI/PR-lifecycle exhaust, no review action"}`.
    - Batch several claim calls then several complete calls per message to go faster; always
      complete an id you claimed within the same or the next message (leases are 300s).
-   - **Context hygiene:** every claim/complete echoes the full ~15 KB webhook payload. Never
+   - **Context hygiene:** every claim returns the full ~15 KB webhook payload. Never
      quote, summarize, or repeat those payloads. Fire the calls and track only counts. Let the
      harness summarize older tool results.
 
