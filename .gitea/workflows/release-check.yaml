@@ -1,0 +1,16 @@
+# Release-tag gate. A vX.Y.Z tag must sit on a commit whose plugin.json says X.Y.Z, because
+# Harness pins this plugin by tag. Runs the same `make release-check` a human runs locally.
+name: release-check
+
+on:
+  push:
+    tags: ['v*']
+
+jobs:
+  release-check:
+    runs-on: ubuntu-latest
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v4
+      - name: make release-check
+        run: make release-check TAG="${GITHUB_REF_NAME}"

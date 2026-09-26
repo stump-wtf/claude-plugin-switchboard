@@ -36,8 +36,12 @@
 # and the chooser falls back to nothing since blank issues are off), and nothing a reader sees
 # may link the private Gitea: a link there looks fine to us and is dead for everyone else.
 # .gitea/ is exempt because its workflows run on that Gitea.
+#
+# @joestump 09/25/2026 - Added release-check. Harness pins this plugin by release tag, so a tag
+# whose plugin.json disagrees with its name pins a version that is not what it says. CI runs it
+# on every v* tag push; it reads the file at the tagged commit, not the tag's name alone.
 
-.PHONY: check test lint
+.PHONY: check test lint release-check
 
 check: test lint
 
@@ -107,3 +111,9 @@ lint:
 		exit 1; \
 	fi
 	@echo "OK"
+
+release-check:
+	@[ -n "$(TAG)" ] || { echo "usage: make release-check TAG=vX.Y.Z"; exit 1; }
+	@v=$$(python3 -c 'import json; print(json.load(open(".claude-plugin/plugin.json"))["version"])'); \
+	[ "$(TAG)" = "v$$v" ] || { echo "tag $(TAG) does not match plugin.json version $$v"; exit 1; }; \
+	echo "OK: $(TAG) matches plugin.json"

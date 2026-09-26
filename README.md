@@ -69,6 +69,23 @@ Report problems with the skill or commands in
 the Switchboard service go to [its tracker](https://github.com/stump-wtf/switchboard/issues), and
 security problems follow [SECURITY.md](SECURITY.md).
 
+## Releases
+
+Every version is a tag. A change that bumps `version` in `.claude-plugin/plugin.json` is followed,
+once it merges, by an annotated `vX.Y.Z` tag on that merge commit, pushed to the canonical
+repository (the GitHub mirror picks it up on its next sync):
+
+```bash
+git fetch origin
+git checkout origin/main
+make release-check TAG=v0.3.0   # fails unless plugin.json says 0.3.0
+git tag -a v0.3.0 -m v0.3.0
+git push origin v0.3.0
+```
+
+CI runs the same `make release-check` on every `v*` tag. Pin a release tag, never a branch:
+[Harness](https://github.com/stump-wtf/harness) pins this plugin by tag in its release manifest.
+
 ## Provenance
 
 Distilled from a real session that triaged a 186-todo `reviews` queue flooded 71% with
