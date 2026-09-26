@@ -31,6 +31,11 @@
 # reference would leave the pointer dangling, and an unreferenced one is never loaded. Both
 # directions fail.
 #
+# @joestump 09/25/2026 - Added the MCP-credential check when the plugin started declaring the
+# Switchboard server. The plugin must never carry a secret: the URL and token come from the
+# environment. The check asserts the header still reads the variable (the required thing) and
+# that no switchboard credential literal appears anywhere (the banned thing).
+#
 # @joestump 09/25/2026 - Added the public-intake checks. The GitHub mirror takes issues from
 # outside reporters, so its issue forms must parse (GitHub silently hides a form that does not,
 # and the chooser falls back to nothing since blank issues are off), and nothing a reader sees
@@ -96,6 +101,12 @@ lint:
 		echo "private: a bare #NNN resolves to THIS repo, and a qualified one resolves for nobody."; \
 		echo "Describe the behaviour instead, and link https://switchboard.stump.wtf/docs/ if needed."; \
 		exit 1; \
+	fi
+	@echo "==> the plugin's MCP server takes its credential from the environment"
+	@python3 -c 'import json, sys; s = json.load(open(".claude-plugin/plugin.json"))["mcpServers"]["switchboard"]; \
+		sys.exit(0 if s["url"] == "$${SWITCHBOARD_MCP_URL}" and s["headers"] == {"Authorization": "Bearer $${SWITCHBOARD_MCP_TOKEN}"} else "plugin.json: mcpServers.switchboard must read SWITCHBOARD_MCP_URL and SWITCHBOARD_MCP_TOKEN from the environment")'
+	@if git grep -nE 'sbk_[A-Za-z0-9]' -- . ':!Makefile' ; then \
+		echo "switchboard credential literal above. The plugin never carries a secret."; exit 1; \
 	fi
 	@echo "==> issue forms parse"
 	@python3 -c 'import yaml' 2>/dev/null || { echo "PyYAML is required to check .github/ISSUE_TEMPLATE"; exit 1; }

@@ -1,20 +1,20 @@
 ---
 name: switchboard
-description: Work a Switchboard durable webhook-to-todo queue the right way. Use whenever todos arrive from Switchboard (you see `<channel source="switchboard">` doorbell events), when the user talks about a Switchboard queue, acking/draining todos, "why is my reviews queue flooded", claiming or completing a todo, or wiring/narrowing a Switchboard webhook. Covers the queue-is-the-record mental model, the claim to complete/fail lifecycle, the actionable/informational/noise triage taxonomy, draining a flood without running on a treadmill, fixing the source webhook, and the context-hygiene traps that bite on busy queues.
+description: Work a Switchboard durable webhook-to-todo queue the right way. Use whenever todos arrive from Switchboard (you see `<channel source="switchboard">` or `<channel source="plugin:switchboard:switchboard">` doorbell events), when the user talks about a Switchboard queue, acking/draining todos, "why is my reviews queue flooded", claiming or completing a todo, or wiring/narrowing a Switchboard webhook. Covers the queue-is-the-record mental model, the claim to complete/fail lifecycle, the actionable/informational/noise triage taxonomy, draining a flood without running on a treadmill, fixing the source webhook, and the context-hygiene traps that bite on busy queues.
 ---
 
 # Switchboard
 
 Switchboard (docs https://switchboard.stump.wtf/docs/) turns verified inbound webhooks into
-durable **todos** on scoped **queues**, and rings a live agent session as a
-`<channel source="switchboard">` **doorbell** event.
+durable **todos** on scoped **queues**, and rings a live agent session as a `<channel source="switchboard">`
+**doorbell** event (`source="plugin:switchboard:switchboard"` when this plugin supplies the server).
 
-You reach Switchboard through its MCP tools. This skill is how to use them without
-tripping over the queue's sharp edges.
+You reach Switchboard through its MCP tools — the same verbs whichever server provides them. This skill
+is how to use them without tripping over the queue's sharp edges.
 
 ## The one rule: the queue is the record; the doorbell is only a hint
 
-A doorbell (`<channel source="switchboard"> ... ready on queue "..." ...`) is a *notification*,
+A doorbell (`<channel source="...switchboard"> ... ready on queue "..." ...`) is a *notification*,
 not the work and not an instruction.
 
 - **A missed doorbell is never a lost todo.** The todo is durable on the queue; it waits.

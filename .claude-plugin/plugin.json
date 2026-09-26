@@ -1,6 +1,6 @@
 {
   "name": "switchboard",
-  "version": "0.2.0",
+  "version": "0.3.0",
   "description": "Work a Switchboard durable webhook-to-todo queue correctly: triage doorbell-driven todos, claim/ack them one at a time, drain noise without running on a treadmill, and narrow the source when one event kind floods.",
   "author": {
     "name": "Joe Stump",
@@ -9,5 +9,20 @@
   "homepage": "https://switchboard.stump.wtf/docs/",
   "repository": "https://github.com/stump-wtf/claude-plugin-switchboard",
   "license": "MIT",
-  "keywords": ["switchboard", "webhooks", "todo-queue", "triage", "mcp", "automation"]
+  "keywords": ["switchboard", "webhooks", "todo-queue", "triage", "mcp", "automation"],
+  "mcpServers": {
+    "switchboard": {
+      "type": "http",
+      "url": "${SWITCHBOARD_MCP_URL}",
+      "headers": {
+        "Authorization": "Bearer ${SWITCHBOARD_MCP_TOKEN}"
+      }
+    }
+  },
+  "channels": [
+    {
+      "server": "switchboard",
+      "displayName": "Switchboard"
+    }
+  ]
 }
