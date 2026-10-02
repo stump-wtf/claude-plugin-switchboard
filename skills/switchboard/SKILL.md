@@ -1,6 +1,6 @@
 ---
 name: switchboard
-description: Work a Switchboard durable webhook-to-todo queue the right way. Use whenever todos arrive from Switchboard (you see `<channel source="switchboard">` or `<channel source="plugin:switchboard:switchboard">` doorbell events), when the user talks about a Switchboard queue, acking/draining todos, "why is my reviews queue flooded", claiming or completing a todo, or wiring/narrowing a Switchboard webhook. Covers the queue-is-the-record mental model, the claim to complete/fail lifecycle, the actionable/informational/noise triage taxonomy, draining a flood without running on a treadmill, fixing the source webhook, and the context-hygiene traps that bite on busy queues.
+description: Work a Switchboard durable webhook-to-todo queue the right way. Use whenever todos arrive from Switchboard (you see `<channel source="switchboard">` or `<channel source="plugin:switchboard:switchboard">` doorbell events), when the user talks about a Switchboard queue, acking/draining todos, "why is my reviews queue flooded", claiming or completing a todo, wiring/narrowing a Switchboard webhook, or operating it with the `switchboard` CLI (vending endpoints, routing rules). Covers the queue-is-the-record mental model, the claim to complete/fail lifecycle, the actionable/informational/noise triage taxonomy, draining a flood without running on a treadmill, fixing the source webhook, and the context-hygiene traps that bite on busy queues.
 ---
 
 # Switchboard
@@ -9,7 +9,7 @@ Switchboard (docs https://switchboard.stump.wtf/docs/) turns verified inbound we
 durable **todos** on scoped **queues**, and rings a live agent session as a `<channel source="switchboard">`
 **doorbell** event (`source="plugin:switchboard:switchboard"` when this plugin supplies the server).
 
-You reach Switchboard through its MCP tools — the same verbs whichever server provides them. This skill is how to use them without tripping over the queue's sharp edges.
+Two ways in, by role. A **worker** holds a vended endpoint and works its queue through that endpoint's MCP tools — the verbs below, whichever server provides them. An **operator** — an interactive session acting for the human — uses the `switchboard` CLI (**Operator CLI**, below) and holds no endpoint MCP. This skill is how to do either without tripping over the queue's sharp edges.
 
 ## The one rule: the queue is the record; the doorbell is only a hint
 
@@ -117,15 +117,15 @@ These matter because Switchboard payloads embed the **entire** upstream webhook 
    subagents" **does not work**: the drain runs in the **tool-holding session**. Narrow the
    source, then batch inline.
 
-## Operator CLI — when to reach past the MCP tools
+## Operator CLI — the interactive session's way in
 
-The server binary is also an operator CLI over operator-scoped OAuth: `switchboard login`, then
-`endpoint vend|list|revoke`, `agent list`, `todo push`, `webhook list`, `webhook rules
-get|test|set` (reference: https://switchboard.stump.wtf/docs/guides/cli-reference). Reach for it
-when the work is **operator-scoped** — vending, pushing a todo, editing a webhook whose endpoint
-lacks the rule verbs — or when you are a **subagent**: no MCP tools inherit, but the CLI works.
-It acts as the human, not the endpoint; do not use it to sidestep an endpoint's missing verbs —
-vend the scope instead. Safe rule edits: `rules get --json` -> edit -> `rules test` -> `rules set`.
+The server binary is also an operator CLI over operator-scoped OAuth. Start with `switchboard status`
+(an expired token refreshes on the next call; `login` only when it says logged out), then `endpoint
+vend|list|revoke`, `agent list`, `todo push`, `webhook list`, `webhook rules get|test|set` (reference:
+https://switchboard.stump.wtf/docs/guides/cli-reference). Interactive sessions and subagents use it for
+all operator work. `vend` prints its credential ONCE: write `--json` to a 0600 file and from there into
+the secret store, never into the transcript. It acts as the human: it has no claim/complete verbs and
+never stands in for an endpoint's missing ones. Rule edits: `rules get --json` -> edit -> `rules test` -> `rules set`.
 
 ## Handing work to another agent
 

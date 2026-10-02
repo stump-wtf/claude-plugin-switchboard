@@ -1,6 +1,6 @@
 {
   "name": "switchboard",
-  "version": "0.4.0",
+  "version": "0.4.1",
   "description": "Work a Switchboard durable webhook-to-todo queue correctly: triage doorbell-driven todos, claim/ack them one at a time, drain noise without running on a treadmill, and narrow the source when one event kind floods.",
   "author": {
     "name": "Joe Stump",
